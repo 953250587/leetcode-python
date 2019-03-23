@@ -41,4 +41,46 @@ class Solution(object):
         :type x: int
         :type target: int
         :rtype: int
+        20 ms,
+        11.7 MB
         """
+        pos = neg = k = 0
+        while target:
+            target, leave = divmod(target, x)
+            # 只需要考虑 +leave 的情况，之后把+leave用x-（x - leave）替换就与-x+leave本质上是一样的
+            # 之后我们假设每一层都是target=（targeti * x + leavei） * x + leave的结构
+            # leave可以直接使用leave * （x/x）或者x - （x - leave）* （x/x）
+            # 前者需要 2 * leave个符号，后者需要（x-leave）* 2 个符号,把多余的x进位到上一层
+            if k == 0:
+                # 最后一层只考虑leave就可以
+                pos, neg = 2 * leave, (x - leave) * 2
+            else:
+                # 其它层需要结合上一层的情况和当前层的leave
+                # 不往上一层进位，前一个不接受下层给他的进位，后一个接受，k表示这层需要*几次x
+                # 往上一层进位，前一个没有接收下层对它的进位，所以保持不变，后者进位抵消一个，所以少1
+                pos, neg = min(pos + leave * k, neg + (leave + 1) * k), min(pos + (x - leave) * k, neg + (x - leave - 1) * k)
+            k += 1
+        # k 为进位后需要连成k次的结果
+        return min(pos, neg + k) - 1
+
+    def leastOpsExpressTarget_1(self, x, y):
+        pos = neg = k = 0
+        while y:
+            y, cur = divmod(y, x)
+            if k:
+                pos, neg = min(cur * k + pos, (cur + 1) * k + neg), min((x - cur) * k + pos, (x - cur - 1) * k + neg)
+            else:
+                pos, neg = cur * 2, (x - cur) * 2
+            k += 1
+        return min(pos, k + neg) - 1
+
+
+if __name__ == '__main__':
+    print(Solution().leastOpsExpressTarget(3, 2))
+    print(Solution().leastOpsExpressTarget(3, 19))
+    print(Solution().leastOpsExpressTarget(5, 501))
+    # print(Solution().leastOpsExpressTarget_1(5, 501))
+    print(Solution().leastOpsExpressTarget(100, 100000000))
+    print(Solution().leastOpsExpressTarget(2, 125046))
+
+
